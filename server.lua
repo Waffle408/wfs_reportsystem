@@ -1,24 +1,86 @@
+reports = {}
+report = {}
 
-function getIdentity(source)
-	local identifier = GetPlayerIdentifiers(source)[1]
-	local result = MySQL.Sync.fetchAll("SELECT * FROM users WHERE identifier = @identifier", {['@identifier'] = identifier})
-	if result[1] ~= nil then
-		local identity = result[1]
 
-		return {
-			identifier = identity['identifier'],
-			name = identity['name'],
-			firstname = identity['firstname'],
-			lastname = identity['lastname'],
-			dateofbirth = identity['dateofbirth'],
-			sex = identity['sex'],
-			height = identity['height'],
-			job = identity['job'],
-			group = identity['group']
+discord_webhook = 'WEBHOOK'
+
+
+
+function log(source)
+
+	connect = {
+		{
+		   ["color"] = "15105570",
+		   ["title"] = "wfs_reportsystem - Transcript with player "..GetPlayerName(source),
+		   ["description"] = {},
+		   ["footer"] = {
+			  ["text"] = os.date('%H:%M - %d. %m. %Y', os.time())..' IDS '..GetPlayerIdentifier(source, 1)
+		   },
 		}
-	else
-		return nil
+	   }
+
+	   
+	transcript = reports[source]
+
+	if #transcript == 1 then
+		description = transcript[1]
+		connect[1].description = description
+	elseif #transcript == 2 then
+		description = transcript[1]..' \n '..transcript[2]
+		connect[1].description = description
+	elseif #transcript == 3 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]
+		connect[1].description = description
+	elseif #transcript == 4 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]..' \n '..transcript[4]
+		connect[1].description = description
+	elseif #transcript == 5 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]..' \n '..transcript[4]..' \n '..transcript[5]
+		connect[1].description = description
+	elseif #transcript == 6 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]..' \n '..transcript[4]..' \n '..transcript[5]..' \n '..transcript[6]
+		connect[1].description = description
+	elseif #transcript == 7 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]..' \n '..transcript[4]..' \n '..transcript[5]..' \n '..transcript[6]..' \n '..transcript[7]
+		connect[1].description = description
+	elseif #transcript == 8 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]..' \n '..transcript[4]..' \n '..transcript[5]..' \n '..transcript[6]..' \n '..transcript[7]..' \n '..transcript[8]
+		connect[1].description = description
+	elseif #transcript == 9 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]..' \n '..transcript[4]..' \n '..transcript[5]..' \n '..transcript[6]..' \n '..transcript[7]..' \n '..transcript[8]..' \n '..transcript[9]
+		connect[1].description = description
+	elseif #transcript == 10 then
+		description = transcript[1]..' \n '..transcript[2]..' \n '..transcript[3]..' \n '..transcript[4]..' \n '..transcript[5]..' \n '..transcript[6]..' \n '..transcript[7]..' \n '..transcript[8]..' \n '..transcript[9]..' \n '..transcript[10]
+		connect[1].description = description
+	else 
+
+		description = json.encode(transcript)..'\n CLEARING TRANSCRIPT REACHED OVER 10 REPLIES'
+
+		connect[1].description = description
+
+		reports[source] = {}
+
 	end
+	
+	print(json.encode(connect[1].description))
+	print(json.encode(connect))
+
+
+
+
+
+	   PerformHttpRequest(discord_webhook, function(err, text, headers) end, 'POST', json.encode({username = 'Report Logs', embeds = connect}), { ['Content-Type'] = 'application/json' })
+
+
+end
+
+
+
+
+
+TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+function getIdentity(source)
+	return ESX.GetPlayerFromId(source).getGroup()
 end
 
 
@@ -32,70 +94,132 @@ end
 
 loadExistingPlayers()
 
-AddEventHandler('es:playerLoaded', function(Source, user)
-	TriggerClientEvent('reply:setGroup', Source, user.getGroup())
+AddEventHandler('esx:playerLoaded', function(source, user)
+	
+	TriggerClientEvent('reply:setGroup', source, ESX.GetPlayerFromId(source).getGroup())
 end)
 
-AddEventHandler('chatMessage', function(source, color, msg)
-	cm = stringsplit(msg, " ")
-	if cm[1] == "/areply" or cm[1] == "/ar" then
+-- (server side script)
+
+-- Registers a command named 'ping'.
+
+RegisterCommand("reply", function(source, args, rawCommand)
+    if (source > 0) then
 		CancelEvent()
-		if tablelength(cm) > 1 then
-			local tPID = tonumber(cm[2])
+		
+
+			
+			local tPID = tonumber(args[1])
 			local names2 = GetPlayerName(tPID)
 			local names3 = GetPlayerName(source)
 			local textmsg = ""
-			for i=1, #cm do
-				if i ~= 1 and i ~=2 then
-					textmsg = (textmsg .. " " .. tostring(cm[i]))
+			for i=1, #args do
+				if i ~= 1 and i ~=1 then
+					textmsg = (textmsg .. " " .. tostring(args[i]))
 				end
 			end
+			print(textmsg)
 			local grupos = getIdentity(source)
-		    if grupos.group ~= 'user' then
+		    if grupos ~= 'user' then
 			    TriggerClientEvent('textmsg', tPID, source, textmsg, names2, names3)
 			    TriggerClientEvent('textsent', source, tPID, names2)
-		    else
-			    TriggerClientEvent('chatMessage', source, "SYSTEM", {255, 0, 0}, "Insuficient Premissions!")
-			end
-		end
-	end	
-	
-	if cm[1] == "/rspec" or cm[1] == "/reportspectate" then
-		CancelEvent()
-		if tablelength(cm) > 1 then
-			local tPID = tonumber(cm[2])
-			local names2 = GetPlayerName(tPID)
-			local names3 = GetPlayerName(source)
-			local textmsg = ""
-			for i=1, #cm do
-				if i ~= 1 and i ~=2 then
-					textmsg = (textmsg .. " " .. tostring(cm[i]))
-				end
-			end
-			local grupos = getIdentity(source)
-		    if grupos.group ~= 'user' then
-				TriggerEvent('EasyAdmin:requestSpectate',tPID)
-		    else
-			    TriggerClientEvent('chatMessage', source, "SYSTEM", {255, 0, 0}, "Insuficient Premissions!")
-			end
-		end
-	end	
-	
+				textmsg = 'AdminName: '..GetPlayerName(source)..' Said, '..textmsg
+				table.insert(reports[tPID], textmsg)
+				-- TriggerEvent('EasyAdmin:requestSpectate',tPID)
 
-	if cm[1] == "/report" then
-		CancelEvent()
-		if tablelength(cm) > 1 then
-			local names1 = GetPlayerName(source)
-			local textmsg = ""
-			for i=1, #cm do
-				if i ~= 1 then
-					textmsg = (textmsg .. " " .. tostring(cm[i]))
-				end
+				log(tPID)
+
+		    else
+			    TriggerClientEvent('chatMessage', source, "SYSTEM", {255, 0, 0}, "Insuficient Premissions!")
 			end
-		    TriggerClientEvent("sendReport", -1, source, names1, textmsg)
+			
+
+    else
+
+        print("This command was executed by the server console, RCON client, or a resource.")
+
+    end
+
+end, false)
+RegisterCommand("rspectate", function(source, args, rawCommand)
+    if (source > 0) then
+		CancelEvent()
+			
+			--print(args[1])
+			source2 = source
+			source = args[1]
+			if args ~= nil then
+				
+			local grupos = getIdentity(source)
+		    if grupos ~= 'user' then
+				 TriggerEvent('EasyAdmin:requestSpectate', args[1])
+				 textmsg = 'Admin: '..GetPlayerName(source2)..' Spectated '..GetPlayerName(source)
+
+				
+
+				 --table.insert(reports[2], textmsg)
+
+
+				 --log(args[1])
+
+		    else
+			    TriggerClientEvent('chatMessage', source2, "SYSTEM", {255, 0, 0}, "Insuficient Premissions!")
+			end
+			
+			end
+
+    else
+
+        print("This command was executed by the server console, RCON client, or a resource.")
+
+    end
+
+end, false)
+
+src = 0
+a = {}
+RegisterCommand("report", function(source, args, rawCommand)
+    if (source > 0) then
+		CancelEvent()
+		
+		local names1 = GetPlayerName(source)
+		local textmsg = ""
+		for i=1, #args do
+			if i > 0 then
+				textmsg = (textmsg .. " " .. tostring(args[i]))
+			end
 		end
-	end	
-end)
+		
+		TriggerClientEvent("sendReport", -1, source, names1, textmsg)
+		
+
+		local xPlayers = ESX.GetPlayers()
+
+		for i=1, #xPlayers, 1 do
+		  local xPlayer = ESX.GetPlayerFromId(xPlayers[i])
+			if reports[xPlayer.source] == nil then
+				reports[xPlayer.source] = {
+					exists = 'yes'
+			} 
+
+			end
+		end
+
+
+		--print(json.encode(reports))         
+		
+
+		textmsg = 'PlayerName: '..GetPlayerName(source)..' Said, '..textmsg
+			table.insert(reports[source], textmsg)
+			log(source)
+    else
+
+        print("This command was executed by the server console, RCON client, or a resource.")
+
+    end
+
+end, false)
+
 
 
 function stringsplit(inputstr, sep)

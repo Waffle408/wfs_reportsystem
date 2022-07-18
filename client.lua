@@ -18,13 +18,8 @@ end)
 
 RegisterNetEvent('sendReport')
 AddEventHandler('sendReport', function(id, name, message)
-  local myId = PlayerId()
-  local pid = GetPlayerFromServerId(id)
-  if pid == myId then
-    TriggerEvent('chatMessage', "", {255, 0, 0}, "Report sent to the admins online!")
-	  TriggerEvent('chatMessage', "", {255, 0, 0}, " [REPORT] | [".. id .."]" .. name .."  "..":^0  " .. message)
-  elseif group ~= 'user' and pid ~= myId then
+
     TriggerEvent('chatMessage', "", {255, 0, 0}, " [REPORT] | [".. id .."]" .. name .."  "..":^0  " .. message)
-  end
+
 end)
 
